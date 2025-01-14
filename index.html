@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download PDF Links</title>
+</head>
+<body>
+    <h1>Download PDF Links</h1>
+    <input type="text" id="urlInput" placeholder="URL" style="width: 300px;">
+    <button onclick="downloadPDFLinks()">Download</button>
+
+    <script>
+        async function downloadPDFLinks() {
+            const url = document.getElementById('urlInput').value.trim();
+
+            if (!url) {
+                alert("Please enter a URL");
+                return;
+            }
+
+            // CORS Proxy URL (CORS Anywhere)
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+
+            try {
+                // Make a request to the proxy URL, which forwards the request to the target URL
+                const response = await fetch(proxyUrl + url);
+                const htmlText = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const links = doc.querySelectorAll('a');
+
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href.endsWith('.pdf')) {
+                        const fullUrl = new URL(href, url).href; // Ensure the PDF link is absolute
+                        const anchor = document.createElement('a');
+                        anchor.href = fullUrl;
+                        anchor.download = ''; // Setting the download attribute to trigger a download
+                        document.body.appendChild(anchor);
+                        anchor.click();  // Trigger the download
+                        document.body.removeChild(anchor);  // Clean up the created element
+                    }
+                });
+            } catch (error) {
+                alert("Error fetching the page: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+
